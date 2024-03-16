@@ -1,6 +1,6 @@
-# NetworkService
+# Networking
 
-`NetworkService` is a Swift package for making network requests using URLSession.
+`Networking` is a Swift package for making network requests using URLSession.
 
 ## Features
 
@@ -10,18 +10,18 @@
 
 ## Installation
 
-You can install `NetworkService` using Swift Package Manager.
+You can install `Networking` using Swift Package Manager.
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/vinodh06/Networking.git", from: "1.0.0")
+    .package(url: "https://github.com/vinodh06/Networking.git", from: "0.0.1")
 ]
 ```
 
 ## Usage
 
 ```swift
-import NetworkService
+import Networking
 
 // Example usage
 let urlBuilder = URLBuilder {
