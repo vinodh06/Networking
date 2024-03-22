@@ -52,6 +52,14 @@ public enum NetworkError: Error {
     }
 }
 
+/// Enum representing events that can occur during the download process.
+public enum DownloadEvent: Equatable {
+    /// Event indicating the reception of response data.
+    case response(Data)
+    /// Event indicating the progress of the download (expressed as a percentage).
+    case progress(Double)
+}
+
 /// A service for making network requests.
 public enum NetworkService {
 
@@ -106,6 +114,62 @@ public enum NetworkService {
             throw NetworkError.serverError("Server Error, status code: \(httpResponse.statusCode)")
         default:
             throw NetworkError.genericError("Generic Error, status code: \(httpResponse.statusCode)")
+        }
+    }
+
+    /// Function to initiate a download process for a given URL.
+    ///
+    /// - Parameters:
+    ///   - urlBuilder: A URLBuilder instance responsible for constructing the download URL.
+    /// - Throws: An error if the URL cannot be constructed or if any other error occurs during the download process.
+    /// - Returns: An `AsyncThrowingStream` that asynchronously yields download events (`DownloadEvent`).
+    public static func download(
+        for urlBuilder: URLBuilder
+    ) throws -> AsyncThrowingStream<DownloadEvent, Error> {
+        // Attempt to construct the download URL
+        guard let url = urlBuilder.build() else {
+            throw NetworkError.invalidURL
+        }
+        // Create a URLRequest with the constructed URL
+        var request = URLRequest(url: url)
+
+        // Return an AsyncThrowingStream that performs the download operation
+        return AsyncThrowingStream<DownloadEvent, Error> { [request = request] continuation in
+            // Asynchronously execute the download operation within a Task
+            Task {
+                do {
+                    if #available(iOS 15.0, *) {
+                        // Use the new async/await URLSession API for iOS 15 and later
+                        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+                        var data = Data()
+                        var receivedBytes: Int64 = 0
+                        let totalBytes = response.expectedContentLength
+
+                        // Iterate over each byte received asynchronously
+                        for try await byte in bytes {
+                            data.append(byte)
+                            receivedBytes += 1
+
+                            // Calculate download progress and yield progress event
+                            if totalBytes > 0 {
+                                let progress = Double(receivedBytes) / Double(totalBytes)
+                                continuation.yield(.progress(progress))
+                            }
+                        }
+
+                        // Yield response data event and finish the continuation
+                        continuation.yield(.response(data))
+                        continuation.finish()
+                    } else {
+                        // Fallback on earlier versions if async/await URLSession API is not available
+                        continuation.finish(throwing: "Unsupported in this OS version" as? Error)
+                        return
+                    }
+                } catch {
+                    // Handle any errors that occur during the download process
+                    continuation.finish(throwing: error)
+                }
+            }
         }
     }
 }
