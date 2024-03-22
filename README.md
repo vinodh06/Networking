@@ -58,7 +58,7 @@ let url = urlBuilder.build()
 import Networking
 
 // Perform a GET request
-NetworkService.fetch(
+NetworkService.request(
     for: urlBuilder,
     method: .GET,
     headers: [

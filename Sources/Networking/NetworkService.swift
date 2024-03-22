@@ -71,7 +71,7 @@ public enum NetworkService {
     ///   - headers: The HTTP headers to include in the request.
     ///   - body: The HTTP body of the request, if any.
     /// - Returns: The decoded response data.
-    public static func fetch<T: Decodable>(
+    public static func request<T: Decodable>(
         for urlBuilder: URLBuilder,
         method: HTTPMethod = .GET,
         headers: [HTTPHeader] = [],
