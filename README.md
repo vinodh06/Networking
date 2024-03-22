@@ -36,7 +36,7 @@ Run `swift build` to download and build the dependencies.
 
 ## Usage
 
-### URLBuilder
+### URLBuilder - To construct a URL
 
 ```swift
 import Networking
