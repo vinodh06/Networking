@@ -70,13 +70,13 @@ public enum NetworkService {
     ///   - method: The HTTP method to use for the request.
     ///   - headers: The HTTP headers to include in the request.
     ///   - body: The HTTP body of the request, if any.
-    /// - Returns: The decoded response data.
-    public static func request<T: Decodable>(
+    /// - Returns: Response data.
+    public static func request(
         for urlBuilder: URLBuilder,
         method: HTTPMethod = .GET,
         headers: [HTTPHeader] = [],
         body: Data? = nil
-    ) async throws -> T {
+    ) async throws -> Data {
 
         // Construct the request URL
         guard let url = urlBuilder.build() else { throw NetworkError.invalidURL }
@@ -101,11 +101,7 @@ public enum NetworkService {
 
         switch httpResponse.statusCode {
         case 200..<300:
-            do {
-                return try JSONDecoder().decode(T.self, from: data)
-            } catch let error {
-                throw NetworkError.decodingError("Failed to decode response data: \(error.localizedDescription)")
-            }
+            return data
         case 300..<400:
             throw NetworkError.redirectionError("Redirection Error, status code: \(httpResponse.statusCode)")
         case 400..<500:
