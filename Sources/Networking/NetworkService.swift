@@ -186,7 +186,8 @@ extension NetworkService {
         for urlBuilder: URLBuilder,
         method: HTTPMethod = .GET,
         headers: [HTTPHeader] = [],
-        body: Data? = nil
+        body: Data? = nil,
+        decoder: JSONDecoder = JSONDecoder()
     ) async throws -> T {
         let data = try await NetworkService.request(
            for: urlBuilder,
@@ -196,7 +197,7 @@ extension NetworkService {
        )
 
         do {
-            return try JSONDecoder().decode(T.self, from: data)
+            return try decoder.decode(T.self, from: data)
         } catch let error {
             throw NetworkError.decodingError("Failed to decode response data: \(error.localizedDescription)")
         }
