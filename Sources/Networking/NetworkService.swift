@@ -37,10 +37,11 @@ public enum NetworkError: Error {
     case redirectionError(String)
     case serverError(String)
 
+    /// Localized description for error handling.
     public var localizedDescription: String {
         switch self {
         case .clientError(let string),
-            .decodingError(let string), 
+            .decodingError(let string),
             .genericError(let string),
             .invalidResponse(let string),
             .redirectionError(let string),
@@ -70,6 +71,7 @@ public enum NetworkService {
     ///   - method: The HTTP method to use for the request.
     ///   - headers: The HTTP headers to include in the request.
     ///   - body: The HTTP body of the request, if any.
+    /// - Throws: `NetworkError` if an error occurs during the request.
     /// - Returns: Response data.
     public static func request(
         for urlBuilder: URLBuilder,
@@ -166,6 +168,37 @@ public enum NetworkService {
                     continuation.finish(throwing: error)
                 }
             }
+        }
+    }
+}
+
+extension NetworkService {
+    /// Fetches and decodes data from a URL using the specified method, headers, and body.
+    ///
+    /// - Parameters:
+    ///   - urlBuilder: The URL builder for constructing the request URL.
+    ///   - method: The HTTP method to use for the request.
+    ///   - headers: The HTTP headers to include in the request.
+    ///   - body: The HTTP body of the request, if any.
+    /// - Throws: `NetworkError` if an error occurs during the request or decoding process.
+    /// - Returns: Decoded data of type `T`.
+    public static func request<T: Decodable>(
+        for urlBuilder: URLBuilder,
+        method: HTTPMethod = .GET,
+        headers: [HTTPHeader] = [],
+        body: Data? = nil
+    ) async throws -> T {
+        let data = try await NetworkService.request(
+           for: urlBuilder,
+           method: method,
+           headers: headers,
+           body: body
+       )
+
+        do {
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch let error {
+            throw NetworkError.decodingError("Failed to decode response data: \(error.localizedDescription)")
         }
     }
 }
